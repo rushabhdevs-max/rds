@@ -1,0 +1,20 @@
+{
+  "stocks": [
+    "AAPL",
+    "GOOGL",
+    "MSFT",
+    "AMZN",
+    "TSLA",
+    "NVDA",
+    "META"
+  ],
+  "etfs": [
+    "SPY",
+    "QQQ",
+    "VTI",
+    "IWM",
+    "DIA",
+    "VOO",
+    "ARKK"
+  ]
+}
