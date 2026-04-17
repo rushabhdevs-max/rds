@@ -7,13 +7,17 @@ import json
 import os
 import signal
 import sys
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 import schedule
 import time
 import yfinance as yf
 from dotenv import load_dotenv
 from twilio.rest import Client
+
+IST = timezone(timedelta(hours=5, minutes=30))
+MARKET_OPEN = (9, 15)
+MARKET_CLOSE = (15, 30)
 
 load_dotenv()
 
@@ -74,7 +78,7 @@ def format_line(symbol: str, data: dict) -> str:
 
 def build_message(stock_data: dict, etf_data: dict) -> str:
     """Build the full WhatsApp message."""
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    now = datetime.now(IST).strftime("%Y-%m-%d %H:%M:%S IST")
     lines = [f"--- Stock & ETF Scanner ---", f"Time: {now}", ""]
 
     if stock_data:
@@ -101,9 +105,22 @@ def send_whatsapp(message: str):
     print(f"[OK] Message sent (SID: {msg.sid})")
 
 
+def is_market_open() -> bool:
+    now = datetime.now(IST)
+    if now.weekday() >= 5:  # Saturday=5, Sunday=6
+        return False
+    t = (now.hour, now.minute)
+    return MARKET_OPEN <= t <= MARKET_CLOSE
+
+
 def scan_and_send():
     """Main scan cycle: fetch prices, build message, send."""
-    print(f"\n[SCAN] {datetime.now().strftime('%H:%M:%S')} - Fetching prices...")
+    if not is_market_open():
+        now_ist = datetime.now(IST).strftime("%H:%M IST, %A")
+        print(f"[SKIP] {now_ist} - Market closed, sleeping until next check.")
+        return
+
+    print(f"\n[SCAN] {datetime.now(IST).strftime('%H:%M:%S IST')} - Fetching prices...")
     watchlist = load_watchlist()
 
     stock_data = fetch_prices(watchlist.get("stocks", []))
@@ -129,6 +146,7 @@ def scan_and_send():
 def main():
     print(f"WhatsApp Stock Scanner started.")
     print(f"Scanning every {SCAN_INTERVAL} minutes.")
+    print(f"Market hours: {MARKET_OPEN[0]}:{MARKET_OPEN[1]:02d} - {MARKET_CLOSE[0]}:{MARKET_CLOSE[1]:02d} IST (Mon-Fri)")
     print(f"Sending to: {WHATSAPP_TO}")
     print(f"Watchlist: {load_watchlist()}")
     print("-" * 40)
