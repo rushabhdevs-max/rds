@@ -69,7 +69,7 @@ def format_line(symbol: str, data: dict) -> str:
         scan_arrow = "+" if diff >= 0 else ""
         scan_chg_str = f" | scan: {scan_arrow}{diff:.2f}%"
 
-    return f"{symbol}: ${price:.2f} ({arrow}{day_chg:.2f}% day){scan_chg_str}"
+    return f"{symbol}: Rs.{price:.2f} ({arrow}{day_chg:.2f}% day){scan_chg_str}"
 
 
 def build_message(stock_data: dict, etf_data: dict) -> str:

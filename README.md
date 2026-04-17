@@ -45,16 +45,18 @@ python scanner.py
 ## Sample Message
 ```
 --- Stock & ETF Scanner ---
-Time: 2026-04-06 10:30:00
+Time: 2026-04-17 10:30:00
 
 STOCKS:
-  AAPL: $198.50 (+1.23% day) | scan: +0.15%
-  TSLA: $245.30 (-0.87% day) | scan: -0.32%
+  RELIANCE.NS: Rs.2890.50 (+1.23% day) | scan: +0.15%
+  TCS.NS: Rs.3845.30 (-0.87% day) | scan: -0.32%
 
 ETFs:
-  SPY: $520.10 (+0.45% day)
-  QQQ: $445.80 (+0.67% day)
+  NIFTYBEES.NS: Rs.252.10 (+0.45% day)
+  BANKBEES.NS: Rs.478.80 (+0.67% day)
 ```
+
+**Note:** NSE tickers use the `.NS` suffix (e.g. `RELIANCE.NS`). For BSE use `.BO`.
 
 ## Running as a background service
 

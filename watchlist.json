@@ -1,20 +1,20 @@
 {
   "stocks": [
-    "AAPL",
-    "GOOGL",
-    "MSFT",
-    "AMZN",
-    "TSLA",
-    "NVDA",
-    "META"
+    "RELIANCE.NS",
+    "TCS.NS",
+    "HDFCBANK.NS",
+    "BHARTIARTL.NS",
+    "ICICIBANK.NS",
+    "INFY.NS",
+    "SBIN.NS",
+    "LT.NS",
+    "ITC.NS",
+    "HINDUNILVR.NS"
   ],
   "etfs": [
-    "SPY",
-    "QQQ",
-    "VTI",
-    "IWM",
-    "DIA",
-    "VOO",
-    "ARKK"
+    "NIFTYBEES.NS",
+    "BANKBEES.NS",
+    "JUNIORBEES.NS",
+    "GOLDBEES.NS"
   ]
 }
