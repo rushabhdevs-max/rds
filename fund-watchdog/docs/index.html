@@ -1,0 +1,60 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fund Watchdog</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0c0f;--panel:#13151b;--panel2:#191c24;--line:#262a35;--ink:#e9ecf2;--muted:#8b93a6;--faint:#5b6273;--amber:#f0b429;--up:#36d399;--down:#f4607b;--us:#5aa0ff;--in:#f0b429}
+*{box-sizing:border-box;margin:0;padding:0}body{background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;font-size:15px;line-height:1.45;background-image:radial-gradient(900px 500px at 88% -8%,rgba(240,180,41,.07),transparent 60%);min-height:100vh;padding-bottom:60px}
+.mono{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums}.up{color:var(--up)}.down{color:var(--down)}.muted{color:var(--muted)}.faint{color:var(--faint)}
+header{position:sticky;top:0;z-index:5;background:rgba(11,12,15,.86);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:14px 16px}
+.brand{display:flex;align-items:center;gap:10px;max-width:960px;margin:0 auto}
+.logo{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;background:linear-gradient(135deg,var(--amber),#b9821a);color:#1a1205;font-weight:800;font-family:'Bricolage Grotesque';font-size:18px}
+h1{font-family:'Bricolage Grotesque';font-weight:800;font-size:19px;letter-spacing:-.3px}.sub{font-size:11px;color:var(--faint);letter-spacing:.4px;text-transform:uppercase}
+main{padding:16px;max-width:960px;margin:0 auto}
+.fcard{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:10px}
+.top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.nm{font-weight:600;font-size:14px;line-height:1.3}.meta{font-size:11px;color:var(--faint);margin-top:3px;text-transform:uppercase;letter-spacing:.4px}
+.flag{display:inline-block;font-size:9px;font-weight:700;padding:2px 6px;border-radius:5px;margin-right:6px;letter-spacing:.5px;vertical-align:2px}.flag.IN{background:rgba(240,180,41,.16);color:var(--in)}.flag.US{background:rgba(90,160,255,.16);color:var(--us)}
+.kind{font-size:9px;color:var(--faint);border:1px solid var(--line);border-radius:4px;padding:1px 5px;margin-left:6px;text-transform:uppercase}
+.nav-big{font-family:'IBM Plex Mono';font-size:20px;font-weight:600;text-align:right;white-space:nowrap}
+.strip{display:flex;margin-top:12px;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.cell{flex:1;text-align:center;padding:8px 4px;border-right:1px solid var(--line)}.cell:last-child{border:none}.k{font-size:9px;color:var(--faint);text-transform:uppercase;letter-spacing:.5px}.v{font-family:'IBM Plex Mono';font-size:14px;font-weight:600;margin-top:2px}
+.spark{display:flex;align-items:flex-end;gap:2px;height:30px;margin-top:12px}.spark i{flex:1;border-radius:1px;min-height:2px;background:var(--amber);opacity:.7}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}th{text-align:left;font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.5px;padding:7px 8px;border-bottom:1px solid var(--line)}td{padding:8px;border-bottom:1px solid var(--line)}td.num,th.num{text-align:right;font-family:'IBM Plex Mono'}tr:last-child td{border:none}
+.badge{font-size:11px;font-weight:600;padding:3px 9px;border-radius:6px}.pass{background:rgba(54,211,153,.13);color:var(--up)}.fail{background:rgba(244,96,123,.13);color:var(--down)}
+.note{font-size:11.5px;color:var(--faint);background:var(--panel2);border:1px dashed var(--line);border-radius:8px;padding:10px 12px;margin:14px 0;line-height:1.5}
+details{margin-top:8px}summary{font-size:12px;color:var(--faint);cursor:pointer}
+.loading{display:inline-block;width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--amber);border-radius:50%;animation:spin .7s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+</style></head><body>
+<header><div class="brand"><div class="logo">W</div><div><h1>Fund Watchdog</h1><div class="sub">India MF · US Stocks & ETFs · live</div></div></div></header>
+<main id="app"><div class="faint mono" style="font-size:12px"><span class="loading"></span> loading…</div></main>
+<script>
+const fmt=(x,d=1)=>x==null||isNaN(x)?'—':(x>=0?'+':'')+(+x).toFixed(d)+'%';
+const cls=x=>x==null||isNaN(x)?'':(x>=0?'up':'down');
+async function j(u){const r=await fetch(u+'?t='+Date.now());if(!r.ok)throw 0;return r.json();}
+function cell(k,v){return `<div class="cell"><div class="k">${k}</div><div class="v ${cls(v)}">${fmt(v)}</div></div>`;}
+function spark(s){if(!s||s.length<2)return '';const v=s.slice(-60).map(p=>p[1]);const mn=Math.min(...v),mx=Math.max(...v),rg=mx-mn||1;return '<div class="spark">'+v.map(x=>`<i style="height:${4+(x-mn)/rg*26}px"></i>`).join('')+'</div>';}
+function ptable(r){const P=[['1Y','y1'],['3Y','y3'],['5Y','y5'],['10Y','y10'],['15Y','y15'],['Since Incep.','si']];const b=r.bench||{};
+ return `<table><thead><tr><th>Period</th><th class="num">Return</th><th class="num">Bench</th><th class="num">Alpha</th><th>Beat</th></tr></thead><tbody>`+
+ P.map(([lbl,k])=>{const f=r[k],bv=b[k],al=(f!=null&&bv!=null)?f-bv:null;
+ const beat=al==null?'<span class="faint">—</span>':(al>=0?'<span class="badge pass">✓</span>':'<span class="badge fail">✗</span>');
+ return `<tr><td>${lbl}</td><td class="num ${cls(f)}">${fmt(f)}</td><td class="num muted">${bv!=null?fmt(bv):'—'}</td><td class="num ${cls(al)}">${al==null?'—':fmt(al)}</td><td>${beat}</td></tr>`;}).join('')+`</tbody></table>`;}
+(async()=>{const app=document.getElementById('app');
+ let idx;try{idx=await j('./data/index.json');}catch(e){app.innerHTML='<div class="note">No data yet. Run <b>python -m etl.run</b> and push.</div>';return;}
+ app.innerHTML='';
+ for(const a of idx){
+   let r={},s=[];try{r=await j(`./data/returns/${a.id}.json`);}catch(e){}try{s=await j(`./data/prices/${a.id}.json`);}catch(e){}
+   const cur=r.currency||'';const r1=r.rolling1;
+   const el=document.createElement('div');el.className='fcard';
+   el.innerHTML=`<div class="top"><div><div class="nm"><span class="flag ${a.market}">${a.market}</span>${a.name}<span class="kind">${a.kind}</span></div><div class="meta">${a.sub||''}</div></div>
+     <div class="nav-big">${r.last!=null?cur+(+r.last).toFixed(2):'—'}<div style="font-size:11px" class="${cls(r.d1)}">${fmt(r.d1,2)} 1D</div></div></div>
+     <div class="strip">${cell('1Y',r.y1)}${cell('3Y',r.y3)}${cell('5Y',r.y5)}${cell('SI',r.si)}</div>
+     ${spark(s)}
+     <details><summary>Performance detail${r1?` · 1Y rolling avg ${r1.avg}% (${r1.posPct}% positive)`:''}</summary>${ptable(r)}</details>`;
+   app.appendChild(el);
+ }
+ const n=document.createElement('div');n.className='note';
+ n.innerHTML='<b>Phase 1 live:</b> prices, returns, rolling & benchmark-beating, refreshed daily. Holdings Δ, sector Δ and change-alerts activate in Phase 2/3 (see SPEC.md).';
+ app.appendChild(n);
+})();
+</script></body></html>
