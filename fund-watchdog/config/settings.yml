@@ -1,0 +1,6 @@
+thresholds:
+  sector_pct: 2.0
+  allocation_pct: 5.0
+notify:
+  telegram: false   # set true in P3 after creating a bot (see SETUP_NEXT.md)
+  email: false
