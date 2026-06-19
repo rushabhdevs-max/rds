@@ -1,0 +1,11 @@
+# Python dependencies for the GST reconciliation engine (gst_recon_agent.py).
+# Install with:  pip install -r recon/requirements.txt
+#
+# NOTE: the .xlsm output step also shells out to LibreOffice (`libreoffice
+# --headless ... --convert-to`). LibreOffice must be installed on the host
+# for report generation to succeed.
+pandas
+numpy
+rapidfuzz
+openpyxl
+xlrd

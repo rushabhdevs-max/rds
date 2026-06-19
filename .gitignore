@@ -40,3 +40,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# gst recon (runtime marker written by run.bat on first launch)
+/recon/.deps-installed
+
+# python
+__pycache__/
+*.pyc
