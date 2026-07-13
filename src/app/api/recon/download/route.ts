@@ -1,20 +1,23 @@
 import { readFile } from "node:fs/promises";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { resolveJobFile } from "@/lib/recon";
+import { resolveJobFile, type DownloadKind } from "@/lib/recon";
 
 export const runtime = "nodejs";
 
-const META: Record<"xlsm" | "cf", { filename: string; type: string }> = {
-  xlsm: {
-    filename: "recon.xlsm",
-    type: "application/vnd.ms-excel.sheet.macroEnabled.12",
-  },
-  cf: {
-    filename: "Carry_Forward_Updated.xlsx",
-    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  },
+const XLSM = "application/vnd.ms-excel.sheet.macroEnabled.12";
+const XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+const META: Record<DownloadKind, { filename: string; type: string }> = {
+  xlsm: { filename: "recon.xlsm", type: XLSM },
+  cf: { filename: "Carry_Forward_Updated.xlsx", type: XLSX },
+  p2workbook: { filename: "recon_phase2.xlsm", type: XLSM },
+  p2gstr2b: { filename: "GSTR-2B_updated.xlsx", type: XLSX },
 };
+
+function isDownloadKind(v: string | null): v is DownloadKind {
+  return v !== null && Object.prototype.hasOwnProperty.call(META, v);
+}
 
 export async function GET(req: NextRequest) {
   // Reading searchParams makes this handler dynamic (per-request) by design.
@@ -22,7 +25,7 @@ export async function GET(req: NextRequest) {
   const job = params.get("job") ?? "";
   const kind = params.get("kind");
 
-  if (kind !== "xlsm" && kind !== "cf") {
+  if (!isDownloadKind(kind)) {
     return NextResponse.json({ error: "Invalid file kind." }, { status: 400 });
   }
 

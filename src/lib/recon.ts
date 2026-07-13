@@ -48,6 +48,7 @@ export interface ReconRunOptions {
 
 const REPO_ROOT = process.cwd();
 const RUNNER = path.join(REPO_ROOT, "recon", "recon_runner.py");
+const PHASE2_RUNNER = path.join(REPO_ROOT, "recon", "phase2_runner.py");
 const PYTHON_BIN = process.env.RECON_PYTHON || "python3";
 const JOBS_ROOT = path.join(os.tmpdir(), "gst-recon");
 
@@ -64,6 +65,16 @@ export interface ReconJob {
 }
 
 const JOB_ID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Fixed output filenames the runners write into a job's out dir, by download kind. */
+export const OUTPUT_FILES = {
+  xlsm: "report.xlsm", // Phase 1 report
+  cf: "Carry_Forward_Updated.xlsx", // Phase 1 updated carry-forward
+  p2workbook: "phase2.xlsm", // Phase 2 updated workbook
+  p2gstr2b: "gstr2b_updated.xlsx", // Phase 2 stamped GSTR-2B
+} as const;
+
+export type DownloadKind = keyof typeof OUTPUT_FILES;
 
 /** Create a fresh job directory under the OS temp dir. */
 export async function createJob(): Promise<ReconJob> {
@@ -83,22 +94,20 @@ export async function createJob(): Promise<ReconJob> {
  */
 export async function resolveJobFile(
   jobId: string,
-  kind: "xlsm" | "cf",
+  kind: DownloadKind,
 ): Promise<string | null> {
   if (!JOB_ID_RE.test(jobId)) return null;
+  const name = OUTPUT_FILES[kind];
+  if (!name) return null;
   const outDir = path.join(JOBS_ROOT, jobId, "out");
-  const candidates =
-    kind === "xlsm" ? ["report.xlsm"] : ["Carry_Forward_Updated.xlsx"];
-  for (const name of candidates) {
-    const p = path.join(outDir, name);
-    // Ensure the resolved path stays inside the job's out dir.
-    if (!p.startsWith(outDir + path.sep)) continue;
-    try {
-      const s = await stat(p);
-      if (s.isFile()) return p;
-    } catch {
-      // not present
-    }
+  const p = path.join(outDir, name);
+  // Ensure the resolved path stays inside the job's out dir.
+  if (!p.startsWith(outDir + path.sep)) return null;
+  try {
+    const s = await stat(p);
+    if (s.isFile()) return p;
+  } catch {
+    // not present
   }
   return null;
 }
@@ -147,6 +156,75 @@ export async function runRecon(
       detail
         ? `Reconciliation failed (exit ${code}). ${detail}`
         : `Reconciliation failed (exit ${code}).`,
+    );
+  }
+  return payload;
+}
+
+/** Summary returned by the Phase 2 driver's `run_phase2`. */
+export interface Phase2Summary {
+  books_input: number;
+  gstr2b_eligible: number;
+  books_matched: number;
+  gstr2b_matched: number;
+  tiers: Record<string, number>;
+  itc_recovered: number;
+  itc_month_label?: string;
+}
+
+export interface Phase2Result {
+  ok: true;
+  /** Absolute path to the updated Phase 2 workbook. */
+  workbook: string;
+  /** Absolute path to the stamped GSTR-2B file. */
+  gstr2b: string;
+  summary: Phase2Summary;
+}
+
+/**
+ * Run the Phase 2 second-pass reconciliation. `phase1` and `gstr2b` must be
+ * paths to files already written into `job.inDir`.
+ */
+export async function runPhase2(
+  job: ReconJob,
+  phase1: string,
+  gstr2b: string,
+  period: string,
+): Promise<Phase2Result> {
+  if (!period.trim()) {
+    throw new ReconRunError("A return period (e.g. May'26) is required for Phase 2.");
+  }
+  const outWorkbook = path.join(job.outDir, OUTPUT_FILES.p2workbook);
+  const outGstr2b = path.join(job.outDir, OUTPUT_FILES.p2gstr2b);
+
+  const args = [
+    PHASE2_RUNNER,
+    "--phase1-workbook", phase1,
+    "--gstr2b", gstr2b,
+    "--period", period.trim(),
+    "--out-workbook", outWorkbook,
+    "--out-gstr2b", outGstr2b,
+    "--result-json", job.resultJson,
+  ];
+
+  const { code, stderr } = await execPython(args);
+
+  let payload: Phase2Result | ReconError | null = null;
+  try {
+    payload = JSON.parse(await readFile(job.resultJson, "utf-8"));
+  } catch {
+    payload = null;
+  }
+
+  if (payload && payload.ok === false) {
+    throw new ReconRunError(payload.error || "Phase 2 reconciliation failed.");
+  }
+  if (!payload || payload.ok !== true) {
+    const detail = stderr.trim().split("\n").slice(-5).join("\n");
+    throw new ReconRunError(
+      detail
+        ? `Phase 2 failed (exit ${code}). ${detail}`
+        : `Phase 2 failed (exit ${code}).`,
     );
   }
   return payload;

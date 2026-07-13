@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ReconForm } from "@/components/ReconForm";
+import { ReconNav } from "@/components/ReconNav";
 
 export const metadata: Metadata = {
   title: "GST IMS ↔ Books Reconciliation",
@@ -11,6 +12,7 @@ export default function ReconPage() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-100 via-indigo-50 to-blue-100 px-4 py-10">
       <div className="mx-auto w-full max-w-3xl">
+        <ReconNav active="phase1" />
         <header className="mb-8">
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
             GST IMS ↔ Books ITC Reconciliation
