@@ -41,8 +41,11 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# gst recon (runtime marker written by run.bat on first launch)
-/recon/.deps-installed
+# run.bat first-launch dependency marker (any tool folder)
+.deps-installed
+
+# airpay recon (runtime state written by the Streamlit app in its own folder)
+/airpay_recon/recon_config.json
 
 # python
 __pycache__/
